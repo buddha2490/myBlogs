@@ -1,0 +1,186 @@
+---
+title: "THE SAS DATA STEP"
+author: "Brian Carter"
+format: html
+editor: visual
+---
+
+# The SAS data step
+
+## Introduction
+
+[I spent most of my career](www.linkedin.com/in/brian-carter-4000522b) as a lonely R programmer in a SAS group that was perpetually failing in its R migration. Changing direction in an organization is always difficult, and in this case the major push back came from non-technical study management staff who still needed SAS for their day to day processes.
+
+These staff managed all of the raw study data coming into our research program. They imported messy questionnaire data from vendors and prepared it for the scientific staff to analyze. The SAS DATA step was their primary domain and they were understandably sensitive to any changes to their workflow that could risk the science.
+
+I often thought that if I could simply translate all their macros, there would be no more excuse and we could cut the cord to SAS, but that strategy was never successful. I came to see that, for large swaths of data professionals, the DATA step was a safe place to do vital technical work. My SAS colleagues took courses in R and after learning the basics deemed the learning curve too steep to make the jump.
+
+This is an entry in a series of blog posts aimed at companies and data professionals who want to make the jump from SAS to R. There are two aspects of the DATA step that promotes a mental model of data processing that make it difficult for SAS users to transition to R. These are the limited data types included in the DATA step and the mechanics of DATA step processing. I hope that fans of the DATA step will find a few strategies to help them along this journey.
+
+## The SAS Data Set
+
+[The SAS data set](https://documentation.sas.com/doc/en/lrcon/9.4/p1134x1jpj9p4in1fdc8pfkl2l6p.htm#:~:text=A%20SAS%20data%20set%20is,be%20processed%20by%20SAS%20software) is a proprietary file type used by SAS and is essentially the only data structure available in SAS. I've always found SAS data sets to conform to what I've always though of as *data*: shaped as a 2-dimensional table with rows and columns. Each row represents a particular *observation* that includes all the information for a particular individual or object. This information is encoded in *variables* and these variables are arranged in a practically unlimited number of columns.
+
+With the popularity of the [tidyverse](https://www.tidyverse.org), SAS users initially find the R dataframe comforting and familiar because the SAS data is essentially in *tidy* format. But unlike SAS, the dataframe is just one of many data structures that are necessary for an R workflow. Unlike SAS, the fundamental data structure in R is the *vector*, a homogeneous set of values. SAS users quickly get overwhelmed with the variety of vectors, matrices, arrays, data.frames, lists, S3 objects, and more.
+
+It is even more frustrating how these objects interact in a typical R workflow. A typical R workflow involves loading and using multiple objects in the operating environment: vectors are used to access subsets of the data frame, vectors are used to subset other vectors, statistical models require matrices, and all of these can be nested in lists of lists.
+
+These concepts do not exist in SAS. In SAS there is just the data set and everything one does is contained within that single data set. Advanced SAS users may often access the macro environment in SAS that provides functionality broadly similar to how R. Focusing on this similarity is often helpful in overcoming some of the learning curve when moving from SAS to R.
+
+## Data types
+
+The SAS DATA Step has exactly two data types: character and numeric. On its face, this seems like it would be a limitation of SAS, but in practice it is a feature. This simplified system includes reasonable defaults for coercion and type conversion, so users don't often have to worry about the underlying types in their variables. This is in contrast to R where there are 6 atomic variable types that can be expanded and adapted across packages and use cases. The below table roughly maps the basic vector types in R to their corresponding SAS versions.
+
+| SAS       | R                | Example                     |
+|-----------|------------------|-----------------------------|
+| Numeric   | Integer          | `0L`, `1L`, `2L`, `3L`      |
+|           | Double (numeric) | `1.5`, `1e10`, `-5.9`       |
+|           | Complex          | `1.5i`, `3+2i`              |
+|           | Logical          | `TRUE`/ `FALSE`             |
+| Character | Character        | `"I am a character string"` |
+|           | Raw              | `01`, `ff`                  |
+
+: SAS and R Atomic Types
+
+### Formats
+
+SAS uses these two primary data types to create a wide variety of formats. SAS dates, for example, are simply a format overlayed on a numeric value representing the number of days relative to January 1st, 1960. This allows users to treat date values like any other number, but display correctly as a date. Users can also distinguish continuous vs categorical variables by adding a format to a numeric variable. Using `PROC FORMAT` will overlay the categorical values along with the order of the derived variable.
+
+SAS users will find the R `factor` type to be the closest analog to a SAS format. The `factor` type is a categorical variable that can be ordered or unordered. SAS users often use formats to order variables for statistical models and reporting, and `factor` can be used for the same purpose in R.
+
+::: panel-tabset
+### SAS Code
+
+![](img/sas2.png){fig-align="center" width="586"}
+
+### R Version
+
+```{r, include=FALSE}
+df <- data.frame(var1 = c(0,0,0,1,1,9))
+```
+
+```{r}
+df |>
+  dplyr::mutate(var1 = factor(var1,
+                              labels = c("No", "Yes", "Missing"))) |>
+  dplyr::count(var1)
+ 
+```
+:::
+
+## Coercion
+
+SAS programmers often run into problems when trying to work with these vector types because SAS has incorporated coercion into more of their DATA step processes. SAS programmers don't often have to think of these coercion processes. Take the following example. This sample data set uses character variables, `char1` and `char2` as character type, and I want to take a mean of them:
+
+::: panel-tabset
+### SAS Code
+
+SAS is helpful and knows that `char1` and `char2` are numbers formatted as strings and automatically converts then for the `mean()`
+
+![](img/sas1.png){fig-align="center" width="586"}
+
+### R Version
+
+In R, the `mean()` function does not coerce the character variables to numeric, so the user must do this manually. In this case, R has set `new` to missing.
+
+```{r, eval=TRUE, warning=FALSE}
+one <- data.frame(NAME = c("BRIAN", "DESIREE", "MARGOT", "OWEN", "RIPLEY"),
+                   char1 = c("1", "2", "3", "1", "10"),
+                   char2 = c("2", "3", "4", "5", "6"))
+
+one |>
+  dplyr::rowwise() |>
+  dplyr::mutate(new = mean(char1, char2))
+```
+:::
+
+To be fair, there are also many examples of R incorporating coercion to help the user in their programming task. But the example demonstrates that R functions are designed to work on particular data types. As users go further into the R ecosystem, they will find that package developers have adapted the 6 basic vector types into a nearly unlimited series of types for which they have written specific functions. This kind of flexibility is a feature of R, shared with many programming languages, but it is a stumbling block for SAS users more accustomed to simple variable types.
+
+## DATA step mechanics
+
+The SAS DATA step operates on two sequential steps. The DATA step first completes a compilation phase where SAS scans the code for syntax errors, quickly alerting the user to missed semicolons and typos before translating the code into machine language. SAS then creates the **program data vector (PDV)**, a temporary object where SAS builds a data set, one observation at a time. The PDV includes each of the final variables created by the DATA step with all attributes, including variable type, length, format, and label.
+
+The program is then executed as a loop, with each row of the input data set processed individually and output to the PDV. If no errors are found in the observation, the result is output to a final data set. This process repeats until SAS finishes with the last observation or an error is identified.
+
+Variable attributes are defined at two stages of the DATA step. Users can explicitly code any attribute: character variables can be created for a given length using the `INPUT` statement, formats and labels can be applied using `FORMAT` ad `LABEL`, respectively. Alternatively, SAS can infer these attributes by, typically by the initial or final attributes fed to the PDV.
+
+This observation-based processing trains SAS programmers to think of the observation as the basic unit of every SAS data set. This mental model is transposed for R users who are understand a data frame is a collection of equal-length vectors. In fact, R users may find the SAS DATA step to be a very inefficient process, but SAS programmers find it intuitive and it is difficult to break. Let's describe 2 examples that SAS users will find commonplace but work very differently in R.
+
+### Example 1: summarizing variables
+
+A typical workflow includes deriving variables based on other variables in the data set. In this case, the user wants to add to variables. Since they are accustomed to SAS's observation-based processing, they could choose the built-in `sum()` function to calculate the total, and this works as expected. However, in R, the `sum()` function is vectorized, which produces a very different result.
+
+::: panel-tabset
+### SAS Code
+
+The SAS code works as expected, the `newvar` variable is simply a row-wise sum of `var1` and `var2`.
+
+![](img/sas3.png){fig-align="center" width="586"}
+
+### R Version
+
+In R, the `sum()` function is vectorized, so the result is the sum of all the values in the vector. This is not what the user intended.
+
+```{r, include=FALSE}
+one <- data.frame(Name = c("Brian", "Desiree", "Margot", "Owen", "Ripley"),
+           var1 = c(1, 2, 3, 1, 10),
+           var2 = c(2, 3, 4, 5, 6))
+```
+
+```{r, eval = TRUE}
+
+one |>
+  dplyr::mutate(newvar = sum(var1, var2))
+
+```
+:::
+
+### Correct R Version
+
+To get the desired result, the user can force R to treat the data frame similarly to SAS by using the `dplyr::rowwise()`. Remember to `dplyr::ungroup()` at the end of each code chunk. **Note**: `dplyr::rowwise()` also demonstrates that observation-based processing is extremely slow.
+
+```{r,}
+one |>
+  dplyr::rowwise() |>
+  dplyr::mutate(newvar = sum(var1, var2)) |>
+  dplyr::ungroup()
+
+```
+
+:::
+
+### Example 2: `RETAIN` statement
+
+The `RETAIN` statement is a common feature in the SAS DATA step. It is used to carry forward the value of a variable from one observation to the next. This is useful for creating lagged variables or for accumulating totals. The `RETAIN` statement works because of the observation-based processing in R. For each iteration of the PDV, the prior value is *retained* rather than initialized to missing. SAS programmers use this for all sorts of things, from [creating sequential identifiers](https://www.listendata.com/2015/10/retain-statement-in-sas.html), to [imputing missing values](https://www.lexjansen.com/nesug/nesug07/po/po03.pdf).
+
+Let's look at an example in SAS of how using the `RETAIN` statement can be used to solve a common problem. `RETAIN` is very useful for calculating a running tally or total of another variable. This example uses `RETAIN` to calculate a cumulative total over years:
+
+::: panel-tabset
+### SAS Code
+
+The SAS code works as expected, the `newvar` variable is simply a row-wise sum of `var1` and `var2`.
+
+![](img/sas4.png){fig-align="center" width="586"}
+
+### R Version
+
+These tools exist in R. The `cumsum()` function is a vectorized version of the `RETAIN` statement. The `cumsum()` function calculates the cumulative sum of a vector.  These are knows as [window functions](https://dplyr.tidyverse.org/articles/window-functions.html) and are fully supported in the `dplyr` package
+
+```{r, include=FALSE}
+one <- data.frame(year = as.character(2000:2008),
+                  N = c(100, 42, 106, 225, 47, 68, 92, 136, 178))
+```
+
+```{r, eval = FALSE}
+
+one |>
+  dplyr::mutate(cum_sum = cumsum(N))
+
+```
+:::
+
+## Where do you start in a SAS migration?
+
+I have helped a lot of organizations migrate from SAS to R.  I've [translated code](https://procogia.com/case-studies/applied-best-practices-in-code-conversion-from-sas-production-processes-to-r/), I've developed details SAS to R cookbooks for major universities, and I've trained small and large groups to prepare them for the transition.  The [`dplyr` and the tidyverse](https://dplyr.tidyverse.org) are the most common tools used in the R ecosystem to replace the DATA step.  The `dplyr` package has simplified the R language for working with tables, and has been extended to work with [databases](https://dbplyr.tidyverse.org) so SAS users can use one set of code and avoid [PROC SQL](https://support.sas.com/resources/papers/proceedings/proceedings/sugi29/268-29.pdf).
+
+But I have found that the tidyverse is not able to do everything I want in R, and it is not designed to.  Users still benefit from a comprehensive R training that introduces them to the the various building blocks of the base R language, so that they can use the tidyverse

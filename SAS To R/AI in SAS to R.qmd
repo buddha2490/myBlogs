@@ -10,7 +10,7 @@ Making the jump from SAS to R is a daunting prospect that requires a significant
 
 ## chattr
 
-The `chattr` package provides a way to use Large Language Models (LLMs) within the Rstudio Viewer panel. `chattr` provides integration with two LLM back-ends, [OpenAI](https://platform.openai.com/docs/introduction) models including GPT 4, 3.5, and DaVinci 3, and [LLamaGPT-Chat](https://github.com/kuvaus/LlamaGPTJ-chat) LLM models available on your local machine. This works similarly to the web portal for Chat GPT, expect that it is integrated within Rstudio.
+The `chattr` package provides a way to use Large Language Models (LLMs) within the Rstudio Viewer panel. `chattr` provides integration with two LLM back-ends, [OpenAI](https://platform.openai.com/docs/introduction) models including GPT 4, 3.5, and DaVinci 3, and [LLamaGPT-Chat](https://github.com/kuvaus/LlamaGPTJ-chat) LLM models available on your local machine. This works similarly to the web portal for Chat GPT, except that it is conveniently integrated within Rstudio and chats can be saved as `.r` files or on the clipboard.
 
 ``` r
 remotes::install_github("mlverse/chattr")
