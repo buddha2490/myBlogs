@@ -1,0 +1,12 @@
+name: sas_data_step
+title: SAS Data Step
+username: brian.carter@procogia.com
+account: brian.carter@procogia.com
+server: procogia.acuna.cloud
+hostUrl: https://procogia.acuna.cloud/__api__
+appId: 238
+bundleId: 277340
+url: https://procogia.acuna.cloud:443/content/8c7f3b5d-0e3b-4429-8188-efdcc366557b/
+version: 1
+asMultiple: FALSE
+asStatic: TRUE

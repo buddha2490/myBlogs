@@ -105,14 +105,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>The SAS data step</h1>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p><a href="www.linkedin.com/in/brian-carter-4000522b">I spent most of my career</a> as a lonely R programmer in a SAS group that was perpetually failing in its R migration. Changing direction in an organization is always difficult, and in this case the major push back came from non-technical study management staff who still needed SAS for their day to day processes.</p>
+<p><a href="www.linkedin.com/in/brian-carter-4000522b">I spent most of my career</a> as a lonely R programmer in a SAS group that was perpetually failing its R migration. Changing the direction in an organization is always difficult, and in this case the major push back mostly came from non-technical study management staff who still needed SAS for their day to day processes.</p>
 <p>These staff managed all of the raw study data coming into our research program. They imported messy questionnaire data from vendors and prepared it for the scientific staff to analyze. The SAS DATA step was their primary domain and they were understandably sensitive to any changes to their workflow that could risk the science.</p>
-<p>I often thought that if I could simply translate all their macros, there would be no more excuse and we could cut the cord to SAS, but that strategy was never successful. I came to see that, for large swaths of data professionals, the DATA step was a safe place to do vital technical work. My SAS colleagues took courses in R and after learning the basics deemed the learning curve too steep to make the jump.</p>
-<p>This is an entry in a series of blog posts aimed at companies and data professionals who want to make the jump from SAS to R. There are two aspects of the DATA step that promotes a mental model of data processing that make it difficult for SAS users to transition to R. These are the limited data types included in the DATA step and the mechanics of DATA step processing. I hope that fans of the DATA step will find a few strategies to help them along this journey.</p>
+<p>I often thought that if I could simply translate their macros and educate them about vectors, there would be no more excuses and we could cut the cord to SAS, but that strategy was never successful. I came to see that, for large swaths of data professionals, the DATA step is a safe place to do vital work. I want to discuss how three aspects of SAS DATA step that builds a particular mental model of data processing that makes it difficult to transition to R.</p>
+<ul>
+<li><p>The tabular SAS data set is the only data structure available in SAS.</p></li>
+<li><p>These data sets store data in only two types</p></li>
+<li><p>These data sets are processed differently than any other data processing language</p></li>
+</ul>
 </section>
-<section id="data-types" class="level2">
-<h2 class="anchored" data-anchor-id="data-types">Data types</h2>
-<p>The SAS DATA Step has exactly two data types: character and numeric. On its face, this seems like it would be a limitation of SAS, but in practice it is a feature. This simplified system includes reasonable defaults for coercion and type conversion, so users don’t often have to worry about the underlying types in their variables. This is in contrast to R where there are 6 atomic variable types that can be expanded and adapted across packages and use cases. The below table roughly maps the basic vector types in R to their corresponding SAS versions.</p>
+<section id="the-sas-data-set" class="level2">
+<h2 class="anchored" data-anchor-id="the-sas-data-set">The SAS Data Set</h2>
+<p><a href="https://documentation.sas.com/doc/en/lrcon/9.4/p1134x1jpj9p4in1fdc8pfkl2l6p.htm#:~:text=A%20SAS%20data%20set%20is,be%20processed%20by%20SAS%20software">The SAS data set</a> is a proprietary file type and is essentially the only data structure available in SAS. SAS data sets conform to what most people think of as <a href="https://gretel.ai/blog/what-is-tabular-data#:~:text=Tabular%20data%20refers%20to%20data,variable%20related%20to%20the%20records">data</a>: a 2-dimensional table with rows representing a particular <em>observation</em> and columns as <em>variables</em> in that observation. The SAS DATA step locks the user into this single tabular data set and all procedures use this single data set as an input.</p>
+<p>Unlike SAS, tabular data sets are just one of many structures that are necessary for a typical R workflow. The fundamental unit of analysis in R is the <a href="https://r4ds.had.co.nz/vectors.html#:~:text=The%20four%20most%20important%20types,won't%20discuss%20them%20here.">vector</a>, a homogeneous set of values of any length. <a href="https://www.w3schools.com/r/r_matrices.asphttps://www.w3schools.com/r/r_matrices.asp">Matrices and arrays</a> expand the vector into a multidimensional structure, and heterogeneous collections of vectors can be collected into <a href="https://www.w3schools.com/r/r_data_frames.asp">data frames</a>, and one can put anything and everything in a <a href="https://www.w3schools.com/r/r_lists.asp">list</a>. A cursory search will reveal <a href="https://adv-r.hadley.nz/oo-tradeoffs.html">additional data structures</a> for more specialized applications.</p>
+<p>The trouble that SAS users often face is that all of these objects are often necessary for a typical R workflow and this can become overwhelming. I often recommend that SAS users get their introduction in R through the <a href="https://www.tidyverse.org">tidyverse</a>. <code>dplyr</code> pipes broadly mirror a SAS data step because they focus the processing on single data frames. However, it is important to continue the learning process to include <em>all</em> the major data structures included in R because they will find that the tidyverse is not a panacea to all data challenges.</p>
+<section id="data-types" class="level3">
+<h3 class="anchored" data-anchor-id="data-types">Data types</h3>
+<p>The SAS DATA Step has exactly two data types: <a href="https://documentation.sas.com/doc/en/pgmsascdc/v_051/lepg/p1gqlhpk5ffltmn1h6iqmzv6mzv7.htm">character and numeric</a>. On its face, this seems like it would be a limitation, but it is has its advantages. This simple system includes reasonable defaults for coercion and type conversion, so users don’t often worry about the underlying types in their variables. This is in contrast to R that includes <a href="https://www.geeksforgeeks.org/types-of-vectors-in-r-programming/">6 atomic variable types</a> that can be expanded and adapted across packages and use cases. The below table <em>roughly</em> maps the basic vector types in R to their corresponding SAS versions.</p>
 <table class="table">
 <caption>SAS and R Atomic Types</caption>
 <thead>
@@ -155,10 +164,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+</section>
 <section id="formats" class="level3">
 <h3 class="anchored" data-anchor-id="formats">Formats</h3>
-<p>SAS uses these two primary data types to create a wide variety of formats. SAS dates, for example, are simply a format overlayed on a numeric value representing the number of days relative to January 1st, 1960. This allows users to treat date values like any other number, but display correctly as a date. Users can also distinguish continuous vs categorical variables by adding a format to a numeric variable. Using <code>PROC FORMAT</code> will overlay the categorical values along with the order of the derived variable.</p>
-<p>SAS users will find the R <code>factor</code> type to be the closest analog to a SAS format. The <code>factor</code> type is a categorical variable that can be ordered or unordered. SAS users often use formats to order variables for statistical models and reporting, and <code>factor</code> can be used for the same purpose in R.</p>
+<p>SAS applies formatting attributes to these two data types to simulate many distinct types of variables. <a href="https://documentation.sas.com/doc/en/lrcon/9.4/p1wj0wt2ebe2a0n1lv4lem9hdc0v.htm">SAS dates</a>, for instance, are simply a numeric value representing the number of days relative to January 1st, 1960. Users treat date values like any other number, but the overlying format displays as a date. Dates work similarly in R, only the value is relative to <a href="https://r4ds.had.co.nz/dates-and-times.html">January 1st, 1970</a>. When working with a SAS data set that includes dates, I often start every program with a quick conversion:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>dateVariables <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"date1"</span>, <span class="st">"date2"</span>, <span class="st">"date3"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df[,dateVariables] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(df[,dateVariables], <span class="cf">function</span>(sasDate) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(sasDate, <span class="at">origin =</span> <span class="st">"1960-01-01"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Users can also distinguish continuous vs categorical variables by including a format for a numeric variable. Using <code>PROC FORMAT</code> will provide display values and order to a variable. SAS users take advantage of this to create ordered output or define reference groups in the <code>CLASS</code> [statement for many models](<a href="https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.4/statug/statug_glm_syntax04.htm" class="uri">https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.4/statug/statug_glm_syntax04.htm</a>)</p>
+<p>SAS users will find the R <code>factor</code> type to be the closest analog to a SAS format. The <code>factor</code> type is a categorical variable that can be ordered or unordered. Just like SAS, <code>factor</code> variables can be used for <em>post hoc</em> contrasts, statistical interactions, and ordered results. Unlike SAS, <code>factor</code> labels/levels are hard coded into the data set; there is no need for a format library so data sets are more portable.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">SAS Code</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R Version</a></li></ul>
 <div class="tab-content">
@@ -171,10 +189,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">var1 =</span> <span class="fu">factor</span>(var1,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No"</span>, <span class="st">"Yes"</span>, <span class="st">"Missing"</span>))) <span class="sc">|&gt;</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">count</span>(var1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">var1 =</span> <span class="fu">factor</span>(var1,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No"</span>, <span class="st">"Yes"</span>, <span class="st">"Missing"</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">count</span>(var1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     var1 n
 1      No 3
@@ -186,10 +204,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-</section>
-<section id="coercion" class="level2">
-<h2 class="anchored" data-anchor-id="coercion">Coercion</h2>
-<p>SAS programmers often run into problems when trying to work with these vector types because SAS has incorporated coercion into more of their DATA step processes. SAS programmers don’t often have to think of these coercion processes. Take the following example. This sample data set uses character variables, <code>char1</code> and <code>char2</code> as character type, and I want to take a mean of them:</p>
+<section id="coercion" class="level3">
+<h3 class="anchored" data-anchor-id="coercion">Coercion</h3>
+<p>SAS is often smart enough to identify a number, even when it is coded as a character string. <em>Coercion</em> is a process where a variable is converted from one type to another and it is often a feature included by developers to make the user experience a bit more seamless. Due to the simple data types used in SAS, <a href="https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.5/lepg/n1gdn9fqqrjbwin1prm30gcpobco.htm#n1remvp377lmyxn1070yon4d8qod">this is often implemented very intuitively</a> and SAS users don’t often think about it until they see a gentle warning in their logs. Take the following example. This sample data set uses character variables, <code>char1</code> and <code>char2</code> to store numeric values, and I want to calculate a mean of them:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">SAS Code</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R Version</a></li></ul>
 <div class="tab-content">
@@ -204,13 +221,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
 <p>In R, the <code>mean()</code> function does not coerce the character variables to numeric, so the user must do this manually. In this case, R has set <code>new</code> to missing.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>one <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">NAME =</span> <span class="fu">c</span>(<span class="st">"BRIAN"</span>, <span class="st">"DESIREE"</span>, <span class="st">"MARGOT"</span>, <span class="st">"OWEN"</span>, <span class="st">"RIPLEY"</span>),</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">char1 =</span> <span class="fu">c</span>(<span class="st">"1"</span>, <span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"1"</span>, <span class="st">"10"</span>),</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">char2 =</span> <span class="fu">c</span>(<span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"4"</span>, <span class="st">"5"</span>, <span class="st">"6"</span>))</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>one <span class="sc">|&gt;</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rowwise</span>() <span class="sc">|&gt;</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">new =</span> <span class="fu">mean</span>(char1, char2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>one <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">NAME =</span> <span class="fu">c</span>(<span class="st">"BRIAN"</span>, <span class="st">"DESIREE"</span>, <span class="st">"MARGOT"</span>, <span class="st">"OWEN"</span>, <span class="st">"RIPLEY"</span>),</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">char1 =</span> <span class="fu">c</span>(<span class="st">"1"</span>, <span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"1"</span>, <span class="st">"10"</span>),</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">char2 =</span> <span class="fu">c</span>(<span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"4"</span>, <span class="st">"5"</span>, <span class="st">"6"</span>))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>one <span class="sc">|&gt;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rowwise</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">new =</span> <span class="fu">mean</span>(char1, char2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5 × 4
 # Rowwise: 
@@ -226,51 +243,115 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>To be fair, there are also many examples of R incorporating coercion to help the user in their programming task. But the example demonstrates that R functions are designed to work on particular data types. As users go further into the R ecosystem, they will find that package developers have adapted the 6 basic vector types into a nearly unlimited series of types for which they have written specific functions. This kind of flexibility is a feature of R, shared with many programming languages, but it is a stumbling block for SAS users more accustomed to simple variable types.</p>
+<p>As a general rule, R functions are designed to only work with a specific type of data: <code>mean()</code> will only work on numeric data and <code>substr()</code> will only work on characters. There are exceptions that will throw off new R programmers. R supports <a href="https://josiahparry.medium.com/not-so-generic-functions-705a88820155">generic functions</a> that seem to work differently depending on the data. The <code>summary()</code> function will provide numeric distributions for a vector of numbers, or structured statistic output if run on a <code>glm</code> object.</p>
+<p>Package developers often incorporate a mixture of generic and type-specific functions because accessing this kind of flexibility is a feature of R that is shared with many programming languages. It takes a bit of getting used to for SAS programmers, but ultimately This kind of flexibility is a feature of R, shared with many programming languages, but this added complexity is often adds to the learning curve for SAS users.</p>
+</section>
 </section>
 <section id="data-step-mechanics" class="level2">
 <h2 class="anchored" data-anchor-id="data-step-mechanics">DATA step mechanics</h2>
-<p>The SAS DATA step operates on two sequential steps. The DATA step first completes a compilation phase where SAS scans the code for syntax errors, quickly alerting the user to missed semicolons and typos before translating the code into machine language. SAS then creates the <strong>program data vector (PDV)</strong>, a temporary object where SAS builds a data set, one observation at a time. The PDV includes each of the final variables created by the DATA step with all attributes, including variable type, length, format, and label.</p>
+<p>The <a href="https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.5/basess/n053a58fwk57v7n14h8x7y7u34y4.htm">SAS DATA step operates on two sequential steps</a>. In the compilation phase, SAS scans the code for syntax errors and translates it into machine language. It creates a <strong>program data vector (PDV)</strong> in memory where is builds the output data set one observation at a time. The PDV will include the final variables with attributes requested by the DATA step.</p>
 <p>The program is then executed as a loop, with each row of the input data set processed individually and output to the PDV. If no errors are found in the observation, the result is output to a final data set. This process repeats until SAS finishes with the last observation or an error is identified.</p>
-<p>Variable attributes are defined at two stages of the DATA step. Users can explicitly code any attribute: character variables can be created for a given length using the <code>INPUT</code> statement, formats and labels can be applied using <code>FORMAT</code> ad <code>LABEL</code>, respectively. Alternatively, SAS can infer these attributes by, typically by the initial or final attributes fed to the PDV.</p>
-<p>R users may find this to be a very inefficient process, but it has its benefits. The basic unit of every SAS data frame is the <strong>observation</strong> and this is how SAS users are often thinking of their code. Let’s describe 2 examples that SAS users find commonplace that work very differently in R.</p>
+<p>Variable attributes are defined at two stages of the DATA step. They can be defined explicitly through <code>INPUT</code>, <code>LENGTH</code>, <code>LABEL</code> or <code>FORMAT</code>. Alternatively, SAS can infer these attributes by, typically by the initial or final attributes fed to the PDV.</p>
+<p>This observation-based processing trains SAS programmers to think of the observation as the basic unit of every SAS data set. As discussed above, the <em>vector</em> is the basic data structure in R and data frames are simply a collection of equal-length vectors and each step of the processing is a manipulation of these vectors.</p>
+<p>Native R users may find the SAS DATA step to be a very inefficient process, but SAS programmers find it intuitive and it is difficult to break. Let’s describe 2 examples that SAS users will find commonplace but work very differently in R.</p>
 <section id="example-1-summarizing-variables" class="level3">
 <h3 class="anchored" data-anchor-id="example-1-summarizing-variables">Example 1: summarizing variables</h3>
-<p>A typical workflow includes deriving variables based on other variables in the dataset. In this case, the user wants to add to variables. Since they are accustomed to SAS’s observation-based processing, they could choose the built-in <code>sum()</code> function to calculate the total, and this works as expected.</p>
+<p>A typical workflow includes deriving new variables based on the values of others. In this case, the user wants to calculate the sum of two variables. Since they are accustomed to SAS’s observation-based processing, they could choose the built-in <code>sum()</code> function to calculate the total, and this works as expected. However, in R, the <code>sum()</code> function is vectorized, which produces a very different result.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">SAS Code</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R Version</a></li></ul>
 <div class="tab-content">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
-
+<p>The SAS code works as expected, the <code>newvar</code> variable is simply a row-wise sum of <code>var1</code> and <code>var2</code>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/sas3.png" class="img-fluid figure-img" width="586"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<p>In R, the <code>sum()</code> function is vectorized, so the result is the sum of all the values in the vector. This is not what the user intended.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"something else"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
-</div>
-</div>
-<p>For example, SAS users would derived a summary variable for each observation by summing three input variables: <code>var = sum(var1, var2, var3);</code>. Since SAS is operating on the observation level, this kind of process makes sense.</p>
-<p>Let’s see how this looks in R:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>iris <span class="sc">|&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">Sum_Length =</span> <span class="fu">sum</span>(Sepal.Length, Sepal.Width)) <span class="sc">|&gt;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Sum_Length) <span class="sc">|&gt;</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>one <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">newvar =</span> <span class="fu">sum</span>(var1, var2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  Sum_Length
-1     1335.1
-2     1335.1
-3     1335.1
-4     1335.1
-5     1335.1
-6     1335.1</code></pre>
+<pre><code>     Name var1 var2 newvar
+1   Brian    1    2     37
+2 Desiree    2    3     37
+3  Margot    3    4     37
+4    Owen    1    5     37
+5  Ripley   10    6     37</code></pre>
 </div>
 </div>
-<p>So why does R return a single value for each observation of the <code>iris</code> data? The <code>sum()</code> function, like most R functions, is vectorized, meaning that it operates on the entire homogeneous variable at once. This is a more efficient way to process data, but it requires the SAS programmer to transpose their mental model of the data frame. Rather than operating on each observation independently, the R programmer must thing about each variable vector as the fundamental processing unit.</p>
-<p>The SAS DATA step splits its process into two independent compilation and executions steps. During compilation, SAS scans the code for syntax errors and then translates it into machine language. It then creates a <strong>Program Data Vector</strong> (PVD) initialized with variable names and attributes to match the desired data output. The program is the executed as a loop, with each row of the input data set being processed and output to the PVD. All variables and their types are determined during compilation; variable attributes are determined when processing the final observation.</p>
-<p>On the face of things, this may seem like an inefficient way to process a data set; indeed, many SAS programmers are excited by how much faster R is at a given task, but it does have a few benefits. First, since the input and output data sets exist on disk, SAS programmers can manipulate large data.</p>
+</div>
+</div>
+</div>
 </section>
+<section id="correct-r-version" class="level3">
+<h3 class="anchored" data-anchor-id="correct-r-version">Correct R Version</h3>
+<p>To get the desired result, the user can force R to treat the data frame similarly to SAS by using the <code>dplyr::rowwise()</code>. Remember to <code>dplyr::ungroup()</code> at the end of each code chunk. <strong>Note</strong>: <code>dplyr::rowwise()</code> also demonstrates that observation-based processing is <em>painfully</em> slow.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>one <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rowwise</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">newvar =</span> <span class="fu">sum</span>(var1, var2)) <span class="sc">|&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">ungroup</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 4
+  Name     var1  var2 newvar
+  &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+1 Brian       1     2      3
+2 Desiree     2     3      5
+3 Margot      3     4      7
+4 Owen        1     5      6
+5 Ripley     10     6     16</code></pre>
+</div>
+</div>
+<p>:::</p>
+</section>
+<section id="example-2-retain-statement" class="level3">
+<h3 class="anchored" data-anchor-id="example-2-retain-statement">Example 2: <code>RETAIN</code> statement</h3>
+<p>The <code>RETAIN</code> statement is a common feature in the SAS DATA step. It is used to carry forward the value of a variable from one observation to the next. This is useful for creating lagged variables or for accumulating totals. The <code>RETAIN</code> statement works because of the observation-based processing in R. For each iteration of the PDV, the prior value is <em>retained</em> rather than initialized to missing. SAS programmers use this for all sorts of things, from <a href="https://www.listendata.com/2015/10/retain-statement-in-sas.html">creating sequential identifiers</a>, to <a href="https://www.lexjansen.com/nesug/nesug07/po/po03.pdf">imputing missing values</a>.</p>
+<p>Let’s look at an example in SAS of how using the <code>RETAIN</code> statement can be used to calculate a cumulative total over years:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">SAS Code</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">R Version</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<p>The SAS code works as expected, the <code>newvar</code> variable is simply a row-wise sum of <code>var1</code> and <code>var2</code>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/sas4.png" class="img-fluid figure-img" width="586"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<p>These tools exist in R. The <code>cumsum()</code> function is a vectorized version of the <code>RETAIN</code> statement. The <code>cumsum()</code> function calculates the cumulative sum of a vector. These are knows as <a href="https://dplyr.tidyverse.org/articles/window-functions.html">window functions</a> and are fully supported in the <code>dplyr</code> package</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>one <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">cum_sum =</span> <span class="fu">cumsum</span>(N))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  year   N cum_sum
+1 2000 100     100
+2 2001  42     142
+3 2002 106     248
+4 2003 225     473
+5 2004  47     520
+6 2005  68     588
+7 2006  92     680
+8 2007 136     816
+9 2008 178     994</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="where-do-you-start-in-a-sas-migration" class="level2">
+<h2 class="anchored" data-anchor-id="where-do-you-start-in-a-sas-migration">Where do you start in a SAS migration?</h2>
+<p>I have helped a lot of organizations migrate from SAS to R. I’ve <a href="https://procogia.com/case-studies/applied-best-practices-in-code-conversion-from-sas-production-processes-to-r/">translated code</a>, I’ve developed detailed SAS to R cookbooks for major universities, and I’ve trained small and large groups to prepare them for the transition. The <a href="https://dplyr.tidyverse.org"><code>dplyr</code> and the tidyverse</a> are the most common tools used in the R ecosystem to replace the DATA step. The <code>dplyr</code> package has simplified the R language for working with tables, and has been extended to work with <a href="https://dbplyr.tidyverse.org">databases</a> so SAS users can use one set of code and avoid <a href="https://support.sas.com/resources/papers/proceedings/proceedings/sugi29/268-29.pdf">PROC SQL</a>.</p>
+<p>But I have found that the tidyverse is not able to do everything I want in R, nor was it designed to. Users still benefit from a comprehensive R training that introduces them to the the various building blocks of the base R language, so that they can use the tidyverse</p>
+</section>
+<section id="conclusions" class="level2">
+<h2 class="anchored" data-anchor-id="conclusions">Conclusions</h2>
 </section>
 </section>
 
