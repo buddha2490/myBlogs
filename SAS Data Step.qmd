@@ -29,9 +29,9 @@ Unlike SAS, tabular data sets are just one of many structures that are necessary
 
 The trouble that SAS users often face is that all of these objects are often necessary for a typical R workflow and this can become overwhelming. I often recommend that SAS users get their introduction in R through the [tidyverse](https://www.tidyverse.org). `dplyr` pipes broadly mirror a SAS data step because they focus the processing on single data frames. However, it is important to continue the learning process to include *all* the major data structures included in R because they will find that the tidyverse is not a panacea to all data challenges.
 
-## Data types
+### Data types
 
-The SAS DATA Step has exactly two data types: character and numeric. On its face, this seems like it would be a limitation of SAS, but in practice it is a feature. This simplified system includes reasonable defaults for coercion and type conversion, so users don't often have to worry about the underlying types in their variables. This is in contrast to R where there are 6 atomic variable types that can be expanded and adapted across packages and use cases. The below table roughly maps the basic vector types in R to their corresponding SAS versions.
+The SAS DATA Step has exactly two data types: character and numeric. On its face, this seems like it would be a limitation of SAS, but in practice it is has its advantages. This simple system includes reasonable defaults for coercion and type conversion, so users don't often worry about the underlying types in their variables. This is in contrast to R where there are [6 atomic variable types](https://www.geeksforgeeks.org/types-of-vectors-in-r-programming/) that can be expanded and adapted across packages and use cases. The below table *roughly* maps the basic vector types in R to their corresponding SAS versions.
 
 | SAS       | R                | Example                     |
 |-----------|------------------|-----------------------------|
@@ -46,9 +46,19 @@ The SAS DATA Step has exactly two data types: character and numeric. On its face
 
 ### Formats
 
-SAS uses these two primary data types to create a wide variety of formats. SAS dates, for example, are simply a format overlayed on a numeric value representing the number of days relative to January 1st, 1960. This allows users to treat date values like any other number, but display correctly as a date. Users can also distinguish continuous vs categorical variables by adding a format to a numeric variable. Using `PROC FORMAT` will overlay the categorical values along with the order of the derived variable.
+SAS uses these two primary data types in conjunction with a wide variety of formats to simulate many distinct types of variables. [SAS dates](https://documentation.sas.com/doc/en/lrcon/9.4/p1wj0wt2ebe2a0n1lv4lem9hdc0v.htm) for example, are simply a format for a numeric value representing the number of days relative to January 1st, 1960. Users treat date values like any other number, but are always displayed correctly as a date. Dates work similarly in R, only the value is relative to January 1st, 1970. When working with a SAS data set that includes dates, I often start every program with a quick conversion:
 
-SAS users will find the R `factor` type to be the closest analog to a SAS format. The `factor` type is a categorical variable that can be ordered or unordered. SAS users often use formats to order variables for statistical models and reporting, and `factor` can be used for the same purpose in R.
+```{r, eval=FALSE}
+dateVariables <- c("date1", "date2", "date3")
+
+df[,dateVariables] <- lapply(df[,dateVariables], function(sasDate) {
+  as.Date(sasDate, origin = "1960-01-01")
+}
+
+```
+
+
+Users can also distinguish continuous vs categorical variables by adding a format to a numeric variable. Using `PROC FORMAT` will overlay the categorical values along with the order of the derived variable.  SAS users will find the R `factor` type to be the closest analog to a SAS format. The `factor` type is a categorical variable that can be ordered or unordered. SAS users often use formats to define reference groups in the `CLASS` statement for many models, and `factor` can be used for the same purpose in R.
 
 ::: panel-tabset
 ### SAS Code
@@ -72,7 +82,7 @@ df |>
 
 ## Coercion
 
-SAS programmers often run into problems when trying to work with these vector types because SAS has incorporated coercion into more of their DATA step processes. SAS programmers don't often have to think of these coercion processes. Take the following example. This sample data set uses character variables, `char1` and `char2` as character type, and I want to take a mean of them:
+SAS is often smart enough to identify a number, even when it is coded as a character string.  *Coercion* is a process where a variable is converted from one type to another and it is often a feature included by developers to make the user experience a bit more seamless.  Due to the simple data types used in SAS, this is often implemented very intuitively and SAS users don't often think about it. Take the following example. This sample data set uses character variables, `char1` and `char2` as character type, and I want to calculate a mean of them:
 
 ::: panel-tabset
 ### SAS Code
@@ -98,9 +108,10 @@ one |>
 
 To be fair, there are also many examples of R incorporating coercion to help the user in their programming task. But the example demonstrates that R functions are designed to work on particular data types. As users go further into the R ecosystem, they will find that package developers have adapted the 6 basic vector types into a nearly unlimited series of types for which they have written specific functions. This kind of flexibility is a feature of R, shared with many programming languages, but it is a stumbling block for SAS users more accustomed to simple variable types.
 
+
 ## DATA step mechanics
 
-The SAS DATA step operates on two sequential steps. The DATA step first completes a compilation phase where SAS scans the code for syntax errors, quickly alerting the user to missed semicolons and typos before translating the code into machine language. SAS then creates the **program data vector (PDV)**, a temporary object where SAS builds a data set, one observation at a time. The PDV includes each of the final variables created by the DATA step with all attributes, including variable type, length, format, and label.
+The SAS DATA step operates on two sequential steps. The DATA step first completes a compilation phase where SAS scans the code for syntax errors and translates the code into machine language. SAS then creates the **program data vector (PDV)**, a temporary object where SAS builds the output data set, one observation at a time. The PDV includes each of the final variables created by the DATA step with all attributes, including variable type, length, format, and label.
 
 The program is then executed as a loop, with each row of the input data set processed individually and output to the PDV. If no errors are found in the observation, the result is output to a final data set. This process repeats until SAS finishes with the last observation or an error is identified.
 

@@ -1,0 +1,10 @@
+---
+title: "AI in data science workflows"
+author: "Brian Carter"
+format: docx
+editor: visual
+---
+
+## Abstract
+
+The integration of generative AI assistants into data science workflows is becoming commonplace and many of these tools have been neatly integrated into the Posit ecosystem. This presentation explores the application of such tools, including GitHub Copilot, the `chattr` R package, and tools for creating Quarto presentations and Shiny applications. We also delve into experimental applications such as code translation, where the fusion of classical programming with AI can yield innovative solutions. Each of these examples teases us with the promise of a truly AI, even if the currently reality is more of a confused graduate assistant. But just like a human assistant, a little bit of management will go a long way and this presentation will demonstrate ProCogia's experience in our daily workflows.
