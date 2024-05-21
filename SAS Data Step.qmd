@@ -9,23 +9,25 @@ editor: visual
 
 ## Introduction
 
-[I spent most of my career](www.linkedin.com/in/brian-carter-4000522b) as a lonely R programmer in a SAS group that was perpetually failing in its R migration. Changing direction in an organization is always difficult, and in this case the major push back came from non-technical study management staff who still needed SAS for their day to day processes.
+[I spent most of my career](www.linkedin.com/in/brian-carter-4000522b) as a lonely R programmer in a SAS group that was perpetually failing its R migration. Changing the direction in an organization is always difficult, and in this case the major push back mostly came from non-technical study management staff who still needed SAS for their day to day processes.
 
 These staff managed all of the raw study data coming into our research program. They imported messy questionnaire data from vendors and prepared it for the scientific staff to analyze. The SAS DATA step was their primary domain and they were understandably sensitive to any changes to their workflow that could risk the science.
 
-I often thought that if I could simply translate all their macros, there would be no more excuse and we could cut the cord to SAS, but that strategy was never successful. I came to see that, for large swaths of data professionals, the DATA step was a safe place to do vital technical work. My SAS colleagues took courses in R and after learning the basics deemed the learning curve too steep to make the jump.
+I often thought that if I could simply translate their macros and educate them about vectors, there would be no more excuses and we could cut the cord to SAS, but that strategy was never successful. I came to see that, for large swaths of data professionals, the DATA step was a safe place to do vital work. I want to discuss three aspects of SAS that form a mental model of data processing making it difficult to transition to R.
 
-This is an entry in a series of blog posts aimed at companies and data professionals who want to make the jump from SAS to R. There are two aspects of the DATA step that promotes a mental model of data processing that make it difficult for SAS users to transition to R. These are the limited data types included in the DATA step and the mechanics of DATA step processing. I hope that fans of the DATA step will find a few strategies to help them along this journey.
+-   The tabular SAS data set is the only data structure available in SAS.
+
+-   These data sets store data in only two types
+
+-   These data sets are processed differently than any other data processing language
 
 ## The SAS Data Set
 
-[The SAS data set](https://documentation.sas.com/doc/en/lrcon/9.4/p1134x1jpj9p4in1fdc8pfkl2l6p.htm#:~:text=A%20SAS%20data%20set%20is,be%20processed%20by%20SAS%20software) is a proprietary file type used by SAS and is essentially the only data structure available in SAS. I've always found SAS data sets to conform to what I've always though of as *data*: shaped as a 2-dimensional table with rows and columns. Each row represents a particular *observation* that includes all the information for a particular individual or object. This information is encoded in *variables* and these variables are arranged in a practically unlimited number of columns.
+[The SAS data set](https://documentation.sas.com/doc/en/lrcon/9.4/p1134x1jpj9p4in1fdc8pfkl2l6p.htm#:~:text=A%20SAS%20data%20set%20is,be%20processed%20by%20SAS%20software) is a proprietary file type used by SAS and is essentially the only data structure available in SAS. SAS data sets conform to what most people think of as [data](https://gretel.ai/blog/what-is-tabular-data#:~:text=Tabular%20data%20refers%20to%20data,variable%20related%20to%20the%20records): a 2-dimentional table with rows representing a particular *observation* and columns as *variables* in that observation. The SAS DATA step locks the user into this single tabular data set and all procedures use this single data set as an input.
 
-With the popularity of the [tidyverse](https://www.tidyverse.org), SAS users initially find the R dataframe comforting and familiar because the SAS data is essentially in *tidy* format. But unlike SAS, the dataframe is just one of many data structures that are necessary for an R workflow. Unlike SAS, the fundamental data structure in R is the *vector*, a homogeneous set of values. SAS users quickly get overwhelmed with the variety of vectors, matrices, arrays, data.frames, lists, S3 objects, and more.
+Unlike SAS, tabular data sets are just one of many structures that are necessary for a typical R workflow. The fundamental unit of analysis in R is the [vector](https://r4ds.had.co.nz/vectors.html#:~:text=The%20four%20most%20important%20types,won't%20discuss%20them%20here.), a homogeneous set of values of any length. [Matrices and arrays](https://www.w3schools.com/r/r_matrices.asphttps://www.w3schools.com/r/r_matrices.asp) expand the vector into a multidimensional structure, and heterogeneous collections of vectors can be collected into [data frames](https://www.w3schools.com/r/r_data_frames.asp), and one can put anything and everything in a [list](https://www.w3schools.com/r/r_lists.asp). A cursory search will reveal [additional data structures](https://adv-r.hadley.nz/oo-tradeoffs.html) for more specialized applications.
 
-It is even more frustrating how these objects interact in a typical R workflow. A typical R workflow involves loading and using multiple objects in the operating environment: vectors are used to access subsets of the data frame, vectors are used to subset other vectors, statistical models require matrices, and all of these can be nested in lists of lists.
-
-These concepts do not exist in SAS. In SAS there is just the data set and everything one does is contained within that single data set. Advanced SAS users may often access the macro environment in SAS that provides functionality broadly similar to how R. Focusing on this similarity is often helpful in overcoming some of the learning curve when moving from SAS to R.
+The trouble that SAS users often face is that all of these objects are often necessary for a typical R workflow and this can become overwhelming. I often recommend that SAS users get their introduction in R through the [tidyverse](https://www.tidyverse.org). `dplyr` pipes broadly mirror a SAS data step because they focus the processing on single data frames. However, it is important to continue the learning process to include *all* the major data structures included in R because they will find that the tidyverse is not a panacea to all data challenges.
 
 ## Data types
 
@@ -164,7 +166,7 @@ The SAS code works as expected, the `newvar` variable is simply a row-wise sum o
 
 ### R Version
 
-These tools exist in R. The `cumsum()` function is a vectorized version of the `RETAIN` statement. The `cumsum()` function calculates the cumulative sum of a vector.  These are knows as [window functions](https://dplyr.tidyverse.org/articles/window-functions.html) and are fully supported in the `dplyr` package
+These tools exist in R. The `cumsum()` function is a vectorized version of the `RETAIN` statement. The `cumsum()` function calculates the cumulative sum of a vector. These are knows as [window functions](https://dplyr.tidyverse.org/articles/window-functions.html) and are fully supported in the `dplyr` package
 
 ```{r, include=FALSE}
 one <- data.frame(year = as.character(2000:2008),
@@ -181,6 +183,6 @@ one |>
 
 ## Where do you start in a SAS migration?
 
-I have helped a lot of organizations migrate from SAS to R.  I've [translated code](https://procogia.com/case-studies/applied-best-practices-in-code-conversion-from-sas-production-processes-to-r/), I've developed details SAS to R cookbooks for major universities, and I've trained small and large groups to prepare them for the transition.  The [`dplyr` and the tidyverse](https://dplyr.tidyverse.org) are the most common tools used in the R ecosystem to replace the DATA step.  The `dplyr` package has simplified the R language for working with tables, and has been extended to work with [databases](https://dbplyr.tidyverse.org) so SAS users can use one set of code and avoid [PROC SQL](https://support.sas.com/resources/papers/proceedings/proceedings/sugi29/268-29.pdf).
+I have helped a lot of organizations migrate from SAS to R. I've [translated code](https://procogia.com/case-studies/applied-best-practices-in-code-conversion-from-sas-production-processes-to-r/), I've developed details SAS to R cookbooks for major universities, and I've trained small and large groups to prepare them for the transition. The [`dplyr` and the tidyverse](https://dplyr.tidyverse.org) are the most common tools used in the R ecosystem to replace the DATA step. The `dplyr` package has simplified the R language for working with tables, and has been extended to work with [databases](https://dbplyr.tidyverse.org) so SAS users can use one set of code and avoid [PROC SQL](https://support.sas.com/resources/papers/proceedings/proceedings/sugi29/268-29.pdf).
 
-But I have found that the tidyverse is not able to do everything I want in R, and it is not designed to.  Users still benefit from a comprehensive R training that introduces them to the the various building blocks of the base R language, so that they can use the tidyverse
+But I have found that the tidyverse is not able to do everything I want in R, and it is not designed to. Users still benefit from a comprehensive R training that introduces them to the the various building blocks of the base R language, so that they can use the tidyverse
