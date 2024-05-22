@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Brian Carter">
+
+<title>THE SAS DATA STEP</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="SAS Data Step_files/libs/clipboard/clipboard.min.js"></script>
+<script src="SAS Data Step_files/libs/quarto-html/quarto.js"></script>
+<script src="SAS Data Step_files/libs/quarto-html/popper.min.js"></script>
+<script src="SAS Data Step_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="SAS Data Step_files/libs/quarto-html/anchor.min.js"></script>
+<link href="SAS Data Step_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="SAS Data Step_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="SAS Data Step_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="SAS Data Step_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="SAS Data Step_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">THE SAS DATA STEP</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Brian Carter </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="the-sas-data-step" class="level1">
+<h1>The SAS data step</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p><a href="www.linkedin.com/in/brian-carter-4000522b">I spent most of my career</a> as a lonely R programmer in a SAS group that was perpetually failing in its R migration. Changing direction in an organization is always difficult, and in this case the major push back came from non-technical study management staff who still needed SAS for their day to day processes.</p>
+<p>These staff managed all of the raw study data coming into our research program. They imported messy questionnaire data from vendors and prepared it for the scientific staff to analyze. The SAS DATA step was their primary domain and they were understandably sensitive to any changes to their workflow that could risk the science.</p>
+<p>I often thought that if I could simply translate all their macros, there would be no more excuse and we could cut the cord to SAS, but that strategy was never successful. I came to see that, for large swaths of data professionals, the DATA step was a safe place to do vital technical work. My SAS colleagues took courses in R and after learning the basics deemed the learning curve too steep to make the jump.</p>
+<p>This is an entry in a series of blog posts aimed at companies and data professionals who want to make the jump from SAS to R. There are two aspects of the DATA step that promotes a mental model of data processing that make it difficult for SAS users to transition to R. These are the limited data types included in the DATA step and the mechanics of DATA step processing. I hope that fans of the DATA step will find a few strategies to help them along this journey.</p>
+</section>
+<section id="data-types" class="level2">
+<h2 class="anchored" data-anchor-id="data-types">Data types</h2>
+<p>The SAS DATA Step has exactly two data types: character and numeric. On its face, this seems like it would be a limitation of SAS, but in practice it is a feature. This simplified system includes reasonable defaults for coercion and type conversion, so users don’t often have to worry about the underlying types in their variables. This is in contrast to R where there are 6 atomic variable types that can be expanded and adapted across packages and use cases. The below table roughly maps the basic vector types in R to their corresponding SAS versions.</p>
+<table class="table">
+<caption>SAS and R Atomic Types</caption>
+<thead>
+<tr class="header">
+<th>SAS</th>
+<th>R</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Numeric</td>
+<td>Integer</td>
+<td><code>0L</code>, <code>1L</code>, <code>2L</code>, <code>3L</code></td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Double (numeric)</td>
+<td><code>1.5</code>, <code>1e10</code>, <code>-5.9</code></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>Complex</td>
+<td><code>1.5i</code>, <code>3+2i</code></td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Logical</td>
+<td><code>TRUE</code>/ <code>FALSE</code></td>
+</tr>
+<tr class="odd">
+<td>Character</td>
+<td>Character</td>
+<td><code>"I am a character string"</code></td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Raw</td>
+<td><code>01</code>, <code>ff</code></td>
+</tr>
+</tbody>
+</table>
+<section id="formats" class="level3">
+<h3 class="anchored" data-anchor-id="formats">Formats</h3>
+<p>SAS uses these two primary data types to create a wide variety of formats. SAS dates, for example, are simply a format overlayed on a numeric value representing the number of days relative to January 1st, 1960. This allows users to treat date values like any other number, but display correctly as a date. Users can also distinguish continuous vs categorical variables by adding a format to a numeric variable. Using <code>PROC FORMAT</code> will overlay the categorical values along with the order of the derived variable.</p>
+<p>SAS users will find the R <code>factor</code> type to be the closest analog to a SAS format. The <code>factor</code> type is a categorical variable that can be ordered or unordered. SAS users often use formats to order variables for statistical models and reporting, and <code>factor</code> can be used for the same purpose in R.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">SAS Code</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R Version</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/sas2.png" class="img-fluid figure-img" width="586"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">var1 =</span> <span class="fu">factor</span>(var1,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No"</span>, <span class="st">"Yes"</span>, <span class="st">"Missing"</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">count</span>(var1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     var1 n
+1      No 3
+2     Yes 2
+3 Missing 1</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="coercion" class="level2">
+<h2 class="anchored" data-anchor-id="coercion">Coercion</h2>
+<p>SAS programmers often run into problems when trying to work with these vector types because SAS has incorporated coercion into more of their DATA step processes. SAS programmers don’t often have to think of these coercion processes. Take the following example. This sample data set uses character variables, <code>char1</code> and <code>char2</code> as character type, and I want to take a mean of them:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">SAS Code</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R Version</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<p>SAS is helpful and knows that <code>char1</code> and <code>char2</code> are numbers formatted as strings and automatically converts then for the <code>mean()</code></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/sas1.png" class="img-fluid figure-img" width="586"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<p>In R, the <code>mean()</code> function does not coerce the character variables to numeric, so the user must do this manually. In this case, R has set <code>new</code> to missing.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>one <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">NAME =</span> <span class="fu">c</span>(<span class="st">"BRIAN"</span>, <span class="st">"DESIREE"</span>, <span class="st">"MARGOT"</span>, <span class="st">"OWEN"</span>, <span class="st">"RIPLEY"</span>),</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">char1 =</span> <span class="fu">c</span>(<span class="st">"1"</span>, <span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"1"</span>, <span class="st">"10"</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">char2 =</span> <span class="fu">c</span>(<span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"4"</span>, <span class="st">"5"</span>, <span class="st">"6"</span>))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>one <span class="sc">|&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rowwise</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">new =</span> <span class="fu">mean</span>(char1, char2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 4
+# Rowwise: 
+  NAME    char1 char2   new
+  &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt; &lt;dbl&gt;
+1 BRIAN   1     2        NA
+2 DESIREE 2     3        NA
+3 MARGOT  3     4        NA
+4 OWEN    1     5        NA
+5 RIPLEY  10    6        NA</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>To be fair, there are also many examples of R incorporating coercion to help the user in their programming task. But the example demonstrates that R functions are designed to work on particular data types. As users go further into the R ecosystem, they will find that package developers have adapted the 6 basic vector types into a nearly unlimited series of types for which they have written specific functions. This kind of flexibility is a feature of R, shared with many programming languages, but it is a stumbling block for SAS users more accustomed to simple variable types.</p>
+</section>
+<section id="data-step-mechanics" class="level2">
+<h2 class="anchored" data-anchor-id="data-step-mechanics">DATA step mechanics</h2>
+<p>The SAS DATA step operates on two sequential steps. The DATA step first completes a compilation phase where SAS scans the code for syntax errors, quickly alerting the user to missed semicolons and typos before translating the code into machine language. SAS then creates the <strong>program data vector (PDV)</strong>, a temporary object where SAS builds a data set, one observation at a time. The PDV includes each of the final variables created by the DATA step with all attributes, including variable type, length, format, and label.</p>
+<p>The program is then executed as a loop, with each row of the input data set processed individually and output to the PDV. If no errors are found in the observation, the result is output to a final data set. This process repeats until SAS finishes with the last observation or an error is identified.</p>
+<p>Variable attributes are defined at two stages of the DATA step. Users can explicitly code any attribute: character variables can be created for a given length using the <code>INPUT</code> statement, formats and labels can be applied using <code>FORMAT</code> ad <code>LABEL</code>, respectively. Alternatively, SAS can infer these attributes by, typically by the initial or final attributes fed to the PDV.</p>
+<p>R users may find this to be a very inefficient process, but it has its benefits. The basic unit of every SAS data frame is the <strong>observation</strong> and this is how SAS users are often thinking of their code. Let’s describe 2 examples that SAS users find commonplace that work very differently in R.</p>
+<section id="example-1-summarizing-variables" class="level3">
+<h3 class="anchored" data-anchor-id="example-1-summarizing-variables">Example 1: summarizing variables</h3>
+<p>A typical workflow includes deriving variables based on other variables in the dataset. In this case, the user wants to add to variables. Since they are accustomed to SAS’s observation-based processing, they could choose the built-in <code>sum()</code> function to calculate the total, and this works as expected.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">SAS Code</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R Version</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"something else"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>For example, SAS users would derived a summary variable for each observation by summing three input variables: <code>var = sum(var1, var2, var3);</code>. Since SAS is operating on the observation level, this kind of process makes sense.</p>
+<p>Let’s see how this looks in R:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>iris <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">Sum_Length =</span> <span class="fu">sum</span>(Sepal.Length, Sepal.Width)) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Sum_Length) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Sum_Length
+1     1335.1
+2     1335.1
+3     1335.1
+4     1335.1
+5     1335.1
+6     1335.1</code></pre>
+</div>
+</div>
+<p>So why does R return a single value for each observation of the <code>iris</code> data? The <code>sum()</code> function, like most R functions, is vectorized, meaning that it operates on the entire homogeneous variable at once. This is a more efficient way to process data, but it requires the SAS programmer to transpose their mental model of the data frame. Rather than operating on each observation independently, the R programmer must thing about each variable vector as the fundamental processing unit.</p>
+<p>The SAS DATA step splits its process into two independent compilation and executions steps. During compilation, SAS scans the code for syntax errors and then translates it into machine language. It then creates a <strong>Program Data Vector</strong> (PVD) initialized with variable names and attributes to match the desired data output. The program is the executed as a loop, with each row of the input data set being processed and output to the PVD. All variables and their types are determined during compilation; variable attributes are determined when processing the final observation.</p>
+<p>On the face of things, this may seem like an inefficient way to process a data set; indeed, many SAS programmers are excited by how much faster R is at a given task, but it does have a few benefits. First, since the input and output data sets exist on disk, SAS programmers can manipulate large data.</p>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
