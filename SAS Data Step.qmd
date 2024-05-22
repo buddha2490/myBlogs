@@ -15,7 +15,7 @@ These staff managed all of the raw study data coming into our research program. 
 
 I often thought that if I could simply translate their macros and educate them about vectors, there would be no more excuses and we could cut the cord to SAS. That strategy was never successful. I came to see that, for large swaths of data professionals, the DATA step is a safe place to do vital work.
 
-I want to discuss three aspects of the SAS DATA step that form a mental model of data processing particular to SAS users and why this make it difficult for them to transition to modern open-source tools.
+I want to discuss three aspects of the SAS DATA step that form a mental model of data processing particular to SAS users and how this make it difficult for them to transition to modern open-source tools.
 
 -   The tabular SAS data set is the only data structure available in SAS.
 
@@ -61,7 +61,7 @@ df[,dateVariables] <- lapply(df[,dateVariables], function(sasDate) {
 
 Users can also distinguish continuous vs categorical variables by including a format for a numeric variable. Using `PROC FORMAT` will provide display values and order to a variable. SAS users take advantage of this to create ordered output or define reference groups in the `CLASS` [statement for many models](https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.4/statug/statug_glm_syntax04.htm).
 
-SAS users will find the R factor type to be the closest analog to a SAS format. The factor type is a categorical vector that can be ordered or unordered. Just like SAS, factor variables can be used for *post hoc* contrasts, statistical interactions, and ordered results. Unlike SAS, factor labels/levels are hard coded into the data; there is no need for a format library which makes R data more portable.
+SAS users will find the R factor type to be the closest analog to a SAS format. The factor type is a categorical vector that can be ordered or unordered. Just like SAS, factor variables can be used for *post hoc* contrasts, statistical interactions, and ordered results. Unlike SAS, factor labels/levels are hard coded into the data; there is no need for a [format library](https://online.stat.psu.edu/stat480/lesson/9/9.4) which makes R data more portable.
 
 ::: panel-tabset
 ### SAS Code
@@ -111,7 +111,7 @@ one |>
 
 As a general rule, R functions are designed to only work with a specific type of data: `mean()` will only work on numeric data and `substr()` will only work on characters. However, there are exceptions to the rule and this often seems like an illogical break in consistency to SAS users. R supports [generic functions](https://josiahparry.medium.com/not-so-generic-functions-705a88820155) that behave differently depending on the data. For Instance, the `summary()` function will provide numeric distributions for a vector of numbers, or structured statistic output if run on a `glm` object.
 
-Package developers often incorporate a mixture of generic and type-specific functions because this kind of flexibility is a feature of R that is shared with many programming languages. It takes a bit of getting used to for SAS programmers, but ultimately allows users to spend more time understanding their data and less time thinking about *how* to understand their data.
+Package developers often incorporate a mixture of generic and type-specific functions because this kind of flexibility is a feature of R shared with many programming languages. It takes a bit of getting used to for SAS programmers, but this ultimately allows users to spend more time understanding their data and less time thinking about *how* to understand their data.
 
 ## DATA step mechanics
 
@@ -119,11 +119,11 @@ The [SAS DATA processing operates on two sequential steps](https://documentation
 
 The program is then executed as a loop, with each row of the input data set processed individually and output to the PDV. If no errors are found in the observation, the result is output to a final data set. This process repeats until SAS finishes with the last observation or an error is identified.
 
-Variable attributes are defined at two stages of the DATA step. They can be defined explicitly through `INPUT`, `LENGTH`, `LABEL` or `FORMAT`. Alternatively, SAS can infer these attributes by, typically by the initial or final attributes fed to the PDV.
+Variable attributes are defined at two stages of the DATA step. They can be defined explicitly through `INPUT`, `LENGTH`, `LABEL` or `FORMAT`. SAS can also infer these attributes, typically by the initial or final attributes fed to the PDV.
 
 This observation-based processing trains SAS programmers to think of the observation as the basic unit of every SAS data set. As discussed above, the *vector* is the basic data structure in R and data frames are simply a collection of equal-length vectors and each step of the processing is a manipulation of these vectors.
 
-Native R users may find the SAS DATA step to be a very inefficient process, but SAS programmers find it intuitive and it is difficult to break. Let's describe 2 examples that SAS users will find commonplace but work very differently in R.
+Native R users may find the SAS DATA step to be a very inefficient process, but SAS programmers find it intuitive and that comfort is difficult to break. Let's describe 2 examples that SAS users will find commonplace but work very differently in R.
 
 ### Example 1: summarizing variables
 
@@ -170,7 +170,7 @@ one |>
 
 ### Example 2: `RETAIN` statement
 
-The `RETAIN` statement is a common feature in the SAS DATA step. It is used to carry forward the value of a variable from one observation to the next. This is useful for creating lagged variables or for accumulating totals. The `RETAIN` statement works because of the observation-based processing in R. For each iteration of the PDV, the prior value is *retained* rather than initialized to missing. SAS programmers use this for all sorts of things, from [creating sequential identifiers](https://www.listendata.com/2015/10/retain-statement-in-sas.html), to [imputing missing values](https://www.lexjansen.com/nesug/nesug07/po/po03.pdf).
+The `RETAIN` statement is a handy feature in the SAS DATA step that takes advantage of observation-processing. It is used to carry forward the value of a variable from one observation to the next. This is useful for creating lagged variables or for accumulating totals. For each iteration of the DATA loop, the prior value is *retained* to the PDV rather than initialized to missing. SAS programmers use this for all sorts of things, from [creating sequential identifiers](https://www.listendata.com/2015/10/retain-statement-in-sas.html), to [imputing missing values](https://www.lexjansen.com/nesug/nesug07/po/po03.pdf).
 
 Let's look at an example in SAS of how using the `RETAIN` statement can be used to calculate a cumulative total over years:
 
@@ -200,7 +200,7 @@ one |>
 
 ## Where do you start in a SAS migration?
 
-I have helped a lot of organizations migrate from SAS to R. I've [translated code](https://procogia.com/case-studies/applied-best-practices-in-code-conversion-from-sas-production-processes-to-r/), I've developed detailed SAS to R cookbooks for major universities, and I've trained small and large groups to prepare them for the transition. The [`dplyr` and the tidyverse](https://dplyr.tidyverse.org) are the most common tools used in the R ecosystem to replace the DATA step. The `dplyr` package has simplified the R language for working with tables, and has been extended to work with [databases](https://dbplyr.tidyverse.org) so SAS users can use one set of code and avoid [PROC SQL](https://support.sas.com/resources/papers/proceedings/proceedings/sugi29/268-29.pdf).
+I have helped a lot of organizations migrate from SAS to R. I've [translated code](https://procogia.com/case-studies/applied-best-practices-in-code-conversion-from-sas-production-processes-to-r/), I've developed detailed SAS to R cookbooks for major universities, and I've trained small and large groups to prepare them for the transition. The [tidyverse](https://dplyr.tidyverse.org) includes the most user-friendly tools used in the R ecosystem to replace the DATA step. The `dplyr` package has simplified the R language for working with tables, and has been extended to work with [databases](https://dbplyr.tidyverse.org) so SAS users can use one set of code and avoid [PROC SQL](https://support.sas.com/resources/papers/proceedings/proceedings/sugi29/268-29.pdf).
 
 But I have found that the tidyverse is not able to do everything I want in R, nor was it designed to. Users still benefit from a comprehensive R training that introduces them to the the various building blocks of the base R language, so that they can use the tidyverse
 
